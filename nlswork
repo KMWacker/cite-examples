@@ -1,0 +1,47 @@
+******************
+*** Data setup ***
+******************
+webuse nlswork, clear
+ssc install estout
+
+*** draw random subsample of 5% (otherwise computational slowdown due to many FEs)
+set seed 123
+sample 5
+
+**********************************************
+*** standard FE regression (no interaction ***
+**********************************************
+xtreg ln_wage age ttl_exp tenure i.collgrad not_smsa south, fe robust
+
+**********************************
+*** ITE interaction regression ***
+**********************************
+
+*interaction with t-varying variable (not_smsa):
+xtreg ln_wage age ttl_exp tenure c.ttl_exp#c.not_smsa i.collgrad not_smsa south, fe robust
+estimates store ite_model1, title(ite1)
+
+*interaction with t-varying and non-t-varying variable (collgrad):
+xtreg ln_wage age ttl_exp tenure c.ttl_exp#c.not_smsa c.ttl_exp#i.collgrad collgrad i.race not_smsa south, fe robust
+estimates store ite_model2, title(ite2)
+
+***********************************
+*** CITE interaction regression ***
+***********************************
+
+bysort idcode: generate unique_id = 1 if _n == 1	    /* so we can refer to ONE observation within panel unit */
+gen CITE_b1 = .										                    /* will store unit-specific coefficients */
+qui reg ln_wage age c.ttl_exp#i.idcode tenure c.ttl_exp#c.not_smsa i.idcode i.race not_smsa south, robust cluster(idcode) nocon
+estimates store cite_model, title(cite)
+levelsof idcode if e(sample), local(levels)
+foreach l of local levels {
+    replace CITE_b1 = _b[ttl_exp#`l'.idcode] if idcode==`l'
+    }
+
+*Present outputs
+estout ite_model1 cite_model, cells(b(star fmt(3)) se(par fmt(3))) stats(r2 N) legend ///
+	starlevels(* 0.1 ** 0.05 *** 0.01) keep(age ttl_exp tenure c.ttl_exp#c.not_smsa not_smsa south)
+reg CITE_b1 if unique_id==1, robust
+estimates store cite_projection1, title(cite projection 1)
+reg CITE_b1 collgrad if unique_id==1, robust
+estimates store cite_projection2, title(cite projection 2)
