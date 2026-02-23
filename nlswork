@@ -41,7 +41,7 @@ foreach l of local levels {
 *Present outputs
 estout ite_model1 cite_model, cells(b(star fmt(3)) se(par fmt(3))) stats(r2 N) legend ///
 	starlevels(* 0.1 ** 0.05 *** 0.01) keep(age ttl_exp tenure c.ttl_exp#c.not_smsa not_smsa south)
-reg CITE_b1 if unique_id==1, robust
+reg CITE_b1 if unique_id==1, robust						/* This is the average ttl_exp coefficient */
 estimates store cite_projection1, title(cite projection 1)
-reg CITE_b1 collgrad if unique_id==1, robust
+reg CITE_b1 collgrad if unique_id==1, robust			/* This is the avg ttl_exp coefficient and its interaction with collgrad */
 estimates store cite_projection2, title(cite projection 2)
