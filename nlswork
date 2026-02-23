@@ -22,7 +22,7 @@ xtreg ln_wage age ttl_exp tenure c.ttl_exp#c.not_smsa i.collgrad not_smsa south,
 estimates store ite_model1, title(ite1)
 
 *interaction with t-varying and non-t-varying variable (collgrad):
-xtreg ln_wage age ttl_exp tenure c.ttl_exp#c.not_smsa c.ttl_exp#i.collgrad collgrad i.race not_smsa south, fe robust
+xtreg ln_wage age ttl_exp tenure c.ttl_exp#c.not_smsa c.ttl_exp#i.collgrad collgrad not_smsa south, fe robust
 estimates store ite_model2, title(ite2)
 
 ***********************************
@@ -31,7 +31,7 @@ estimates store ite_model2, title(ite2)
 
 bysort idcode: generate unique_id = 1 if _n == 1	    /* so we can refer to ONE observation within panel unit */
 gen CITE_b1 = .										    /* will store unit-specific coefficients */
-qui reg ln_wage age c.ttl_exp#i.idcode tenure c.ttl_exp#c.not_smsa i.idcode i.race not_smsa south, robust cluster(idcode) nocon
+qui reg ln_wage age c.ttl_exp#i.idcode tenure c.ttl_exp#c.not_smsa i.idcode not_smsa south, robust cluster(idcode) nocon
 estimates store cite_model, title(cite)
 levelsof idcode if e(sample), local(levels)
 foreach l of local levels {
