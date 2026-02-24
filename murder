@@ -23,7 +23,7 @@ estimates store ite_model1, title(ite1)
 bysort id: generate unique_id = 1 if _n == 1	    /* so we can refer to ONE observation within panel unit */
 gen CITE_b1 = .										                /* will store unit-specific coefficients */
 
-qui reg mrdrte c.exec#i.id unem c.unem#c.exec, robust cluster(id) nocon
+qui reg mrdrte c.exec#i.id unem c.unem#c.exec i.id, robust cluster(id) nocon
 estimates store cite_model, title(cite)
 levelsof id if e(sample), local(levels)
 foreach l of local levels {
