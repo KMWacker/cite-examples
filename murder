@@ -37,8 +37,9 @@ reg CITE_b1 if unique_id==1, robust						/* This is the average exec coefficient
 
 *marginal effect at mean (avg b-coef. + interaction-term x mean G variable):
 qui sum unem
-di 0.6211011 + (-0.300)*r(mean)
+di 0.1516938 + (-0.077)*r(mean)		/* for CITE */
+di 0.874 + (-0.137)*r(mean)			/* for ITE */
 
 *marginal effect at minimum unemployment (avg b-coef. + interaction-term x min. G variable):
 qui sum unem, det
-di 0.6211011 + (-0.300)*r(min)
+di 0.1516938 + (-0.077)*r(min)
