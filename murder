@@ -1,0 +1,44 @@
+******************
+*** Data setup ***
+******************
+
+use http://www.stata.com/data/jwooldridge/eacsap/murder.dta, clear
+ssc install estout
+
+**********************************************
+*** standard FE regression (no interaction ***
+**********************************************
+xtreg mrdrte exec unem, fe robust
+
+**********************************
+*** ITE interaction regression ***
+**********************************
+xtreg mrdrte exec unem c.exec#c.unem, fe robust
+estimates store ite_model1, title(ite1)
+
+***********************************
+*** CITE interaction regression ***
+***********************************
+
+bysort id: generate unique_id = 1 if _n == 1	    /* so we can refer to ONE observation within panel unit */
+gen CITE_b1 = .										                /* will store unit-specific coefficients */
+
+qui reg mrdrte c.exec#i.id unem c.unem#c.exec, robust cluster(id) nocon
+estimates store cite_model, title(cite)
+levelsof id if e(sample), local(levels)
+foreach l of local levels {
+    replace CITE_b1 = _b[exec#`l'.id] if id==`l'
+    }
+	
+*Present outputs
+estout ite_model1 cite_model, cells(b(star fmt(3)) se(par fmt(3))) stats(r2 N, fmt(2 0)) legend ///
+	starlevels(* 0.1 ** 0.05 *** 0.01) keep(exec unem c.exec#c.unem)
+reg CITE_b1 if unique_id==1, robust						/* This is the average exec coefficient */
+
+*marginal effect at mean (avg b-coef. + interaction-term x mean G variable):
+qui sum unem
+di 0.6211011 + (-0.300)*r(mean)
+
+*marginal effect at minimum unemployment (avg b-coef. + interaction-term x min. G variable):
+qui sum unem, det
+di 0.6211011 + (-0.300)*r(min)
