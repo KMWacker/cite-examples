@@ -1,0 +1,34 @@
+******************
+*** Data setup ***
+******************
+use http://www.stata.com/data/jwooldridge/eacsap/wagepan.dta, clear
+ssc install estout
+
+***********************************************
+*** standard FE regression (no interaction) ***
+***********************************************
+xtreg lwage exper black i.union, fe robust
+
+**********************************
+*** ITE interaction regression ***
+**********************************
+xtreg lwage exper black c.exper#i.black i.union, fe robust
+estimates store ite_model1, title(ite1)
+
+***********************************
+*** CITE interaction regression ***
+***********************************
+
+bysort nr: generate unique_id = 1 if _n == 1	    /* so we can refer to ONE observation within panel unit */
+gen CITE_b1 = .										                /* will store unit-specific coefficients */
+qui reg lwage c.exper#i.nr i.union i.nr, robust cluster(nr) nocon
+estimates store cite_model, title(cite)
+levelsof nr if e(sample), local(levels)
+foreach l of local levels {
+    replace CITE_b1 = _b[exper#`l'.nr] if nr==`l'
+    }
+	
+*Present outputs
+estout ite_model1 cite_model, cells(b(star fmt(3)) se(par fmt(3))) stats(r2 N, fmt(2 0)) legend ///
+	starlevels(* 0.1 ** 0.05 *** 0.01) keep(exper 1.black#c.exper 1.union)
+reg CITE_b1 black if unique_id==1, robust			/* This is the average exper coefficient (_cons) and its interaction with black */
